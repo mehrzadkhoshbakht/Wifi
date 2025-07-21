@@ -6,7 +6,7 @@ from modules.device_discoverer import discover_devices
 from modules.port_scanner import scan_ports
 from tqdm import tqdm
 from modules.vulnerability_scanner import check_vulnerabilities, get_os, get_service_versions
-from modules.report_generator import generate_html_report
+from modules.report_generator import generate_html_report, generate_pdf_report, generate_csv_report
 from modules.wireless_attacker import deauthentication_attack
 from modules.password_cracker import crack_ftp_password, crack_ssh_password
 
@@ -58,9 +58,10 @@ def interactive_mode(config):
             if open_ports:
                 print(f"Open ports on {ip_address}: {open_ports}")
         elif choice == "4":
-            output_report = input(f"Enter the path to save the HTML report (default: {config.get('report', 'default_output_path')}): ")
+            report_format = input("Enter the report format (html, pdf, csv): ")
+            output_report = input(f"Enter the path to save the report (default: {config.get('report', 'default_output_path')}.{report_format}): ")
             if not output_report:
-                output_report = config.get('report', 'default_output_path')
+                output_report = f"{config.get('report', 'default_output_path')}.{report_format}"
             print("Performing a full scan...")
             report_data = {
                 "wifi_networks": scan_wifi_networks(),
@@ -102,7 +103,12 @@ def interactive_mode(config):
 
             if output_report:
                 print(f"Generating report at {output_report}...")
-                generate_html_report(report_data, "wifisecpy/templates/report_template.html", output_report)
+                if report_format == "html":
+                    generate_html_report(report_data, "wifisecpy/templates/report_template.html", output_report)
+                elif report_format == "pdf":
+                    generate_pdf_report(report_data, output_report)
+                elif report_format == "csv":
+                    generate_csv_report(report_data, output_report)
                 print("Report generated successfully.")
         elif choice == "5":
             target_mac = input("Enter the target MAC address: ")
@@ -139,7 +145,8 @@ def main():
     parser.add_argument("--os-scan", action="store_true", help="Perform an OS scan on all discovered devices (requires root).")
     parser.add_argument("--service-scan", action="store_true", help="Perform a service version scan on all discovered devices.")
     parser.add_argument("--full-scan", action="store_true", help="Perform a full scan (discover devices, scan ports, check vulnerabilities).")
-    parser.add_argument("--output-report", type=str, default=config.get('report', 'default_output_path'), help="The path to save the HTML report.")
+    parser.add_argument("--output-report", type=str, default=config.get('report', 'default_output_path'), help="The path to save the report.")
+    parser.add_argument("--report-format", type=str, default="html", help="The format of the report (html, pdf, csv).")
 
     args = parser.parse_args()
 
@@ -248,7 +255,12 @@ def main():
 
         if args.output_report:
             print(f"Generating report at {args.output_report}...")
-            generate_html_report(report_data, "wifisecpy/templates/report_template.html", args.output_report)
+            if args.report_format == "html":
+                generate_html_report(report_data, "wifisecpy/templates/report_template.html", args.output_report)
+            elif args.report_format == "pdf":
+                generate_pdf_report(report_data, args.output_report)
+            elif args.report_format == "csv":
+                generate_csv_report(report_data, args.output_report)
             print("Report generated successfully.")
 
 if __name__ == "__main__":

@@ -3,3 +3,4 @@ netifaces
 jinja2
 requests
 tqdm
+reportlab
