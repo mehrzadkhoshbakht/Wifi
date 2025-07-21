@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFiSecPy Security Report</title>
+    <style>
+        body { font-family: sans-serif; }
+        h1, h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>WiFiSecPy Security Report</h1>
+
+    <h2>WiFi Networks</h2>
+    <table>
+        <tr>
+            <th>SSID</th>
+            <th>Signal Strength</th>
+            <th>Encryption</th>
+        </tr>
+        {% for network in wifi_networks %}
+        <tr>
+            <td>{{ network.ssid }}</td>
+            <td>{{ network.rssi }}</td>
+            <td>{{ network.capabilities }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Discovered Devices</h2>
+    <table>
+        <tr>
+            <th>IP Address</th>
+            <th>MAC Address</th>
+        </tr>
+        {% for device in discovered_devices %}
+        <tr>
+            <td>{{ device.ip }}</td>
+            <td>{{ device.mac }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Port Scan Results</h2>
+    {% for device in port_scan_results %}
+    <h3>{{ device.ip }}</h3>
+    <table>
+        <tr>
+            <th>Port</th>
+            <th>Status</th>
+        </tr>
+        {% for port in device.open_ports %}
+        <tr>
+            <td>{{ port }}</td>
+            <td>Open</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+
+    <h2>Vulnerability Assessment</h2>
+    {% for device in vulnerability_results %}
+    <h3>{{ device.ip }}</h3>
+    <table>
+        <tr>
+            <th>Port</th>
+            <th>Potential Vulnerability</th>
+        </tr>
+        {% for port, vulnerability in device.vulnerabilities.items() %}
+        <tr>
+            <td>{{ port }}</td>
+            <td>{{ vulnerability }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+</body>
+</html>
