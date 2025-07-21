@@ -2,3 +2,4 @@ scapy
 netifaces
 jinja2
 requests
+tqdm
