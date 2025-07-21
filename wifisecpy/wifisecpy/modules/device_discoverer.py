@@ -1,4 +1,25 @@
+import requests
 from scapy.all import ARP, Ether, srp
+
+def get_mac_vendor(mac_address):
+    """
+    Gets the vendor of a MAC address using the macvendors.com API.
+
+    Args:
+        mac_address: The MAC address to look up.
+
+    Returns:
+        The vendor of the MAC address, or None if not found.
+    """
+    url = f"https://api.macvendors.com/{mac_address}"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.text
+        else:
+            return None
+    except requests.exceptions.RequestException:
+        return None
 
 def discover_devices(network_range):
     """
@@ -18,6 +39,7 @@ def discover_devices(network_range):
 
     devices = []
     for sent, received in result:
-        devices.append({'ip': received.psrc, 'mac': received.hwsrc})
+        vendor = get_mac_vendor(received.hwsrc)
+        devices.append({'ip': received.psrc, 'mac': received.hwsrc, 'vendor': vendor})
 
     return devices

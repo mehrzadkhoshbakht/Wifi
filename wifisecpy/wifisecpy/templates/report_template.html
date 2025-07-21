@@ -34,11 +34,13 @@
         <tr>
             <th>IP Address</th>
             <th>MAC Address</th>
+            <th>Vendor</th>
         </tr>
         {% for device in discovered_devices %}
         <tr>
             <td>{{ device.ip }}</td>
             <td>{{ device.mac }}</td>
+            <td>{{ device.vendor if device.vendor else "N/A" }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -59,6 +61,20 @@
         {% endfor %}
     </table>
     {% endfor %}
+
+    <h2>OS Detection Results</h2>
+    <table>
+        <tr>
+            <th>IP Address</th>
+            <th>Operating System</th>
+        </tr>
+        {% for result in os_results %}
+        <tr>
+            <td>{{ result.ip }}</td>
+            <td>{{ result.os }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
     <h2>Vulnerability Assessment</h2>
     {% for device in vulnerability_results %}
