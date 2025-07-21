@@ -7,6 +7,8 @@ from modules.port_scanner import scan_ports
 from tqdm import tqdm
 from modules.vulnerability_scanner import check_vulnerabilities, get_os, get_service_versions
 from modules.report_generator import generate_html_report
+from modules.wireless_attacker import deauthentication_attack
+from modules.password_cracker import crack_ftp_password, crack_ssh_password
 
 def interactive_mode(config):
     while True:
@@ -15,7 +17,9 @@ def interactive_mode(config):
         print("2. Discover devices on the network")
         print("3. Scan for open ports on a specific IP address")
         print("4. Perform a full scan")
-        print("5. Exit")
+        print("5. Perform a deauthentication attack")
+        print("6. Crack a password")
+        print("7. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -101,6 +105,23 @@ def interactive_mode(config):
                 generate_html_report(report_data, "wifisecpy/templates/report_template.html", output_report)
                 print("Report generated successfully.")
         elif choice == "5":
+            target_mac = input("Enter the target MAC address: ")
+            gateway_mac = input("Enter the gateway MAC address: ")
+            deauthentication_attack(target_mac, gateway_mac)
+        elif choice == "6":
+            service = input("Enter the service to crack (ftp or ssh): ")
+            hostname = input("Enter the hostname or IP address: ")
+            username = input("Enter the username: ")
+            password_list_path = input("Enter the path to the password list: ")
+            with open(password_list_path, "r") as f:
+                password_list = [line.strip() for line in f]
+            if service == "ftp":
+                crack_ftp_password(hostname, username, password_list)
+            elif service == "ssh":
+                crack_ssh_password(hostname, username, password_list)
+            else:
+                print("Invalid service. Please try again.")
+        elif choice == "7":
             break
         else:
             print("Invalid choice. Please try again.")
