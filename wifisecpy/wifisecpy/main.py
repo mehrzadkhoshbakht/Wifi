@@ -3,7 +3,7 @@ import netifaces
 from modules.wifi_scanner import scan_wifi_networks
 from modules.device_discoverer import discover_devices
 from modules.port_scanner import scan_ports
-from modules.vulnerability_scanner import check_vulnerabilities, get_os
+from modules.vulnerability_scanner import check_vulnerabilities, get_os, get_service_versions
 from modules.report_generator import generate_html_report
 
 def main():
@@ -13,6 +13,7 @@ def main():
     parser.add_argument("--scan-ports", type=str, help="Scan for open ports on a specific IP address.")
     parser.add_argument("--ports", type=str, default="1-1024", help="The port range to scan (e.g., '1-1024', '80,443').")
     parser.add_argument("--os-scan", action="store_true", help="Perform an OS scan on all discovered devices (requires root).")
+    parser.add_argument("--service-scan", action="store_true", help="Perform a service version scan on all discovered devices.")
     parser.add_argument("--full-scan", action="store_true", help="Perform a full scan (discover devices, scan ports, check vulnerabilities).")
     parser.add_argument("--output-report", type=str, help="The path to save the HTML report.")
 
@@ -62,6 +63,21 @@ def main():
                 if os:
                     print(f"  IP: {device['ip']}, OS: {os}")
 
+    if args.service_scan:
+        print("Performing service version scan on all discovered devices...")
+        gateways = netifaces.gateways()
+        default_gateway = gateways['default'][netifaces.AF_INET][0]
+        network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
+        devices = discover_devices(network_range)
+        if devices:
+            ports_to_scan = range(1, 1025)
+            for device in devices:
+                print(f"Scanning services on {device['ip']}...")
+                services = get_service_versions(device['ip'], ports_to_scan)
+                if services:
+                    for port, service in services.items():
+                        print(f"  Port {port}: {service}")
+
     if args.full_scan:
         report_data = {
             "wifi_networks": scan_wifi_networks(),
@@ -69,6 +85,8 @@ def main():
             "port_scan_results": [],
             "vulnerability_results": [],
             "os_results": [],
+            "service_results": [],
+            "cve_results": [],
         }
 
         gateways = netifaces.gateways()
@@ -91,6 +109,13 @@ def main():
                     os = get_os(device['ip'])
                     if os:
                         report_data["os_results"].append({"ip": device['ip'], "os": os})
+                if args.service_scan:
+                    services = get_service_versions(device['ip'], open_ports)
+                    if services:
+                        report_data["service_results"].append({"ip": device['ip'], "services": services})
+                        cves = scan_for_cves(services)
+                        if cves:
+                            report_data["cve_results"].append({"ip": device['ip'], "cves": cves})
 
 
         if args.output_report:

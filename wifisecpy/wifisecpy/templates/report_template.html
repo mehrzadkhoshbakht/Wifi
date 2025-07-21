@@ -29,6 +29,40 @@
         {% endfor %}
     </table>
 
+    <h2>Service Version Detection Results</h2>
+    {% for device in service_results %}
+    <h3>{{ device.ip }}</h3>
+    <table>
+        <tr>
+            <th>Port</th>
+            <th>Service Version</th>
+        </tr>
+        {% for port, service in device.services.items() %}
+        <tr>
+            <td>{{ port }}</td>
+            <td>{{ service }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+
+    <h2>CVE Scanning Results</h2>
+    {% for device in cve_results %}
+    <h3>{{ device.ip }}</h3>
+    <table>
+        <tr>
+            <th>CVE ID</th>
+            <th>Description</th>
+        </tr>
+        {% for cve_id, description in device.cves.items() %}
+        <tr>
+            <td>{{ cve_id }}</td>
+            <td>{{ description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+
     <h2>Discovered Devices</h2>
     <table>
         <tr>
