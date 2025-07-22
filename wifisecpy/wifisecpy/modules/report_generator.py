@@ -14,12 +14,14 @@ def generate_html_report(data, template_path, output_path):
         output_path: The path to save the generated report.
     """
     try:
+        logging.info(f"Generating HTML report at {output_path}...")
         env = Environment(loader=FileSystemLoader('.'))
         template = env.get_template(template_path)
         html = template.render(data)
 
         with open(output_path, "w") as f:
             f.write(html)
+        logging.info("HTML report generated successfully.")
     except Exception as e:
         logging.error(f"Error generating HTML report: {e}")
 
@@ -32,6 +34,7 @@ def generate_pdf_report(data, output_path):
         output_path: The path to save the generated report.
     """
     try:
+        logging.info(f"Generating PDF report at {output_path}...")
         doc = SimpleDocTemplate(output_path, pagesize=letter)
         elements = []
 
@@ -61,6 +64,7 @@ def generate_pdf_report(data, output_path):
         elements.append(Table(vuln_data))
 
         doc.build(elements)
+        logging.info("PDF report generated successfully.")
     except Exception as e:
         logging.error(f"Error generating PDF report: {e}")
 
@@ -73,6 +77,7 @@ def generate_csv_report(data, output_path):
         output_path: The path to save the generated report.
     """
     try:
+        logging.info(f"Generating CSV report at {output_path}...")
         with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
 
@@ -93,5 +98,6 @@ def generate_csv_report(data, output_path):
             for result in data.get("vulnerability_results", []):
                 for port, vuln in result.get("vulnerabilities", {}).items():
                     writer.writerow([result.get("ip"), port, vuln])
+        logging.info("CSV report generated successfully.")
     except Exception as e:
         logging.error(f"Error generating CSV report: {e}")
