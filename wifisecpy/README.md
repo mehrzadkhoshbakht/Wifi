@@ -1,6 +1,6 @@
 # WiFiSecPy
 
-WiFiSecPy is a Python-based security tool for testing the security of wireless networks and devices. It is designed to run on Android devices using Termux, without requiring root access.
+WiFiSecPy is a Python-based security tool for testing the security of wireless networks and devices. It is designed to run on Android devices using Termux, without requiring root access for most features.
 
 ## Features
 
@@ -8,7 +8,9 @@ WiFiSecPy is a Python-based security tool for testing the security of wireless n
 *   Discover devices connected to the network.
 *   Scan for open ports on network devices.
 *   Check for basic vulnerabilities.
-*   Generate a professional HTML report.
+*   Perform deauthentication attacks.
+*   Crack WPA/WPA2 passwords.
+*   Generate professional reports in HTML, PDF, and CSV formats.
 
 ## Installation
 
@@ -19,7 +21,7 @@ WiFiSecPy is a Python-based security tool for testing the security of wireless n
 2.  **Install Dependencies:**
     *   Open Termux and run the following commands:
         ```bash
-        pkg install python nmap termux-api
+        pkg install python nmap aircrack-ng termux-api
         pip install -r requirements.txt
         ```
 
@@ -31,28 +33,85 @@ WiFiSecPy is a Python-based security tool for testing the security of wireless n
 
 ## Usage
 
-### Scan for WiFi Networks
+WiFiSecPy uses a command-line interface (CLI) with sub-commands for each of its functionalities.
+
+### Scan
+
+The `scan` command is used to scan for WiFi networks, devices, ports, OS, and services.
+
+**Usage:**
 ```bash
-python wifisecpy/main.py --scan-wifi
+python wifisecpy/main.py scan [OPTIONS]
 ```
 
-### Discover Devices on the Network
-```bash
-python wifisecpy/main.py --discover-devices
-```
+**Options:**
+*   `--wifi`: Scan for nearby WiFi networks.
+*   `--devices`: Discover devices on the network.
+*   `--ports <ip_address>`: Scan for open ports on a specific IP address.
+*   `--port-range <port_range>`: The port range to scan (e.g., '1-1024', '80,443').
+*   `--os`: Perform an OS scan on all discovered devices (requires root).
+*   `--services`: Perform a service version scan on all discovered devices.
 
-### Scan for Open Ports
-```bash
-python wifisecpy/main.py --scan-ports <ip_address> --ports <port_range>
-```
 **Example:**
 ```bash
-python wifisecpy/main.py --scan-ports 192.168.1.1 --ports 1-1024
+python wifisecpy/main.py scan --wifi --devices
 ```
 
-### Perform a Full Scan and Generate a Report
+### Attack
+
+The `attack` command is used to perform attacks, such as a deauthentication attack.
+
+**Usage:**
 ```bash
-python wifisecpy/main.py --full-scan --output-report reports/scan_report.html
+python wifisecpy/main.py attack --deauth --target-mac <target_mac> --gateway-mac <gateway_mac> [OPTIONS]
+```
+
+**Options:**
+*   `--deauth`: Perform a deauthentication attack.
+*   `--target-mac <target_mac>`: The MAC address of the target device.
+*   `--gateway-mac <gateway_mac>`: The MAC address of the gateway.
+*   `--iface <iface>`: The wireless interface to use for the attack (default: wlan0).
+
+**Example:**
+```bash
+python wifisecpy/main.py attack --deauth --target-mac 00:11:22:33:44:55 --gateway-mac 66:77:88:99:AA:BB
+```
+
+### Crack
+
+The `crack` command is used to crack WPA/WPA2 passwords.
+
+**Usage:**
+```bash
+python wifisecpy/main.py crack --wpa --cap-file <cap_file> --password-list <password_list>
+```
+
+**Options:**
+*   `--wpa`: Crack a WPA/WPA2 password.
+*   `--cap-file <cap_file>`: The path to the .cap file containing the handshake.
+*   `--password-list <password_list>`: The path to the password list.
+
+**Example:**
+```bash
+python wifisecpy/main.py crack --wpa --cap-file handshake.cap --password-list passwords.txt
+```
+
+### Report
+
+The `report` command is used to generate a security report.
+
+**Usage:**
+```bash
+python wifisecpy/main.py report [OPTIONS]
+```
+
+**Options:**
+*   `--output-path <output_path>`: The path to save the report.
+*   `--format <format>`: The format of the report (html, pdf, csv).
+
+**Example:**
+```bash
+python wifisecpy/main.py report --output-path my_report.html --format html
 ```
 
 ## Disclaimer
