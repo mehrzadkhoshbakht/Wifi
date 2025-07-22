@@ -18,10 +18,12 @@ def scan_ports(ip_address, ports, progress_bar=None):
     iterable = tqdm(ports) if progress_bar is None else ports
     for port in iterable:
         try:
+            logging.debug(f"Scanning port {port} on {ip_address}")
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(1)
                 result = s.connect_ex((ip_address, port))
                 if result == 0:
+                    logging.debug(f"Port {port} is open on {ip_address}")
                     open_ports.append(port)
         except socket.error as e:
             logging.error(f"Error scanning port {port} on {ip_address}: {e}")

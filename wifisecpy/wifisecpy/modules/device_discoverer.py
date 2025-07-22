@@ -36,6 +36,7 @@ def discover_devices(network_range):
     """
     devices = []
     try:
+        logging.debug(f"Discovering devices in network range: {network_range}")
         arp = ARP(pdst=network_range)
         ether = Ether(dst="ff:ff:ff:ff:ff:ff")
         packet = ether/arp
@@ -43,6 +44,7 @@ def discover_devices(network_range):
         result = srp(packet, timeout=3, verbose=0)[0]
 
         for sent, received in result:
+            logging.debug(f"Discovered device: IP={received.psrc}, MAC={received.hwsrc}")
             vendor = get_mac_vendor(received.hwsrc)
             devices.append({'ip': received.psrc, 'mac': received.hwsrc, 'vendor': vendor})
     except Exception as e:
