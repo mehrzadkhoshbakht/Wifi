@@ -2,6 +2,7 @@ import requests
 from scapy.all import ARP, Ether, srp
 import logging
 
+
 def get_mac_vendor(mac_address):
     """
     Gets the vendor of a MAC address using the macvendors.com API.
@@ -18,11 +19,17 @@ def get_mac_vendor(mac_address):
         if response.status_code == 200:
             return response.text
         else:
-            logging.warning(f"Could not get vendor for MAC address {mac_address}. Status code: {response.status_code}")
+            logging.warning(
+                f"Could not get vendor for MAC address {mac_address}. "
+                f"Status code: {response.status_code}"
+            )
             return None
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error getting vendor for MAC address {mac_address}: {e}")
+        logging.error(
+            f"Error getting vendor for MAC address {mac_address}: {e}"
+        )
         return None
+
 
 def discover_devices(network_range):
     """
@@ -39,14 +46,18 @@ def discover_devices(network_range):
         logging.debug(f"Discovering devices in network range: {network_range}")
         arp = ARP(pdst=network_range)
         ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-        packet = ether/arp
+        packet = ether / arp
 
         result = srp(packet, timeout=3, verbose=0)[0]
 
         for sent, received in result:
-            logging.debug(f"Discovered device: IP={received.psrc}, MAC={received.hwsrc}")
+            logging.debug(
+                f"Discovered device: IP={received.psrc}, MAC={received.hwsrc}"
+            )
             vendor = get_mac_vendor(received.hwsrc)
-            devices.append({'ip': received.psrc, 'mac': received.hwsrc, 'vendor': vendor})
+            devices.append(
+                {"ip": received.psrc, "mac": received.hwsrc, "vendor": vendor}
+            )
     except Exception as e:
         logging.error(f"Error discovering devices: {e}")
 
