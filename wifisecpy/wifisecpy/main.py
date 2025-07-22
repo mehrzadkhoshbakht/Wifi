@@ -113,7 +113,10 @@ def interactive_mode(config):
         elif choice == "5":
             target_mac = input("Enter the target MAC address: ")
             gateway_mac = input("Enter the gateway MAC address: ")
-            deauthentication_attack(target_mac, gateway_mac)
+            iface = input("Enter the wireless interface (default: wlan0): ")
+            if not iface:
+                iface = "wlan0"
+            deauthentication_attack(target_mac, gateway_mac, iface)
         elif choice == "6":
             service = input("Enter the service to crack (ftp or ssh): ")
             hostname = input("Enter the hostname or IP address: ")
