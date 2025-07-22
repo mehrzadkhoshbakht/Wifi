@@ -32,21 +32,22 @@
     </table>
 
     <h2>Service Version Detection Results</h2>
-    {% for device in service_results %}
-    <h3>{{ device.ip }}</h3>
-    <table>
+    <table class="service-table">
         <tr>
+            <th>IP Address</th>
             <th>Port</th>
             <th>Service Version</th>
         </tr>
-        {% for port, service in device.services.items() %}
-        <tr>
-            <td>{{ port }}</td>
-            <td>{{ service }}</td>
-        </tr>
+        {% for device in service_results %}
+            {% for port, service in device.services.items() %}
+            <tr>
+                <td>{{ device.ip }}</td>
+                <td>{{ port }}</td>
+                <td>{{ service }}</td>
+            </tr>
+            {% endfor %}
         {% endfor %}
     </table>
-    {% endfor %}
 
     <h2>CVE Scanning Results</h2>
     {% for device in cve_results %}
@@ -132,6 +133,9 @@
     <div class="chart-container">
         <canvas id="open-ports-chart"></canvas>
     </div>
+    <div class="chart-container">
+        <canvas id="vendor-chart"></canvas>
+    </div>
 
     <script>
         var openPortsData = {{ port_scan_results|tojson }};
@@ -182,6 +186,44 @@
                     title: {
                         display: true,
                         text: 'Open Ports Distribution'
+                    }
+                }
+            }
+        });
+
+        var discoveredDevicesData = {{ discovered_devices|tojson }};
+        var vendorCounts = {};
+        discoveredDevicesData.forEach(function(device) {
+            var vendor = device.vendor ? device.vendor : "Unknown";
+            if (vendorCounts[vendor]) {
+                vendorCounts[vendor]++;
+            } else {
+                vendorCounts[vendor] = 1;
+            }
+        });
+
+        var vendorCtx = document.getElementById('vendor-chart').getContext('2d');
+        var vendorChart = new Chart(vendorCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(vendorCounts),
+                datasets: [{
+                    label: 'Devices per Vendor',
+                    data: Object.values(vendorCounts),
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    title: {
+                        display: true,
+                        text: 'Devices per Vendor'
                     }
                 }
             }
