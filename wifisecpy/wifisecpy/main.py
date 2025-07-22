@@ -17,7 +17,10 @@ config = configparser.ConfigParser()
 config.read('wifisecpy/config.ini')
 
 def setup_logging(config):
-    log_file = config.get('logging', 'log_file', fallback='wifisecpy.log')
+    log_dir = config.get('logging', 'log_dir', fallback='wifisecpy/logs')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    log_file = os.path.join(log_dir, config.get('logging', 'log_file', fallback='wifisecpy.log'))
     log_level_str = config.get('logging', 'log_level', fallback='INFO').upper()
     log_level = getattr(logging, log_level_str, logging.INFO)
 
