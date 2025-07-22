@@ -204,6 +204,16 @@ def attack(
 
 
 @app.command()
+def gui():
+    """
+    Launch the WiFiSecPy GUI.
+    """
+    from wifisecpy.gui import create_gui
+
+    create_gui()
+
+
+@app.command()
 def report(
     output_path: str = typer.Option(
         config.get("report", "default_output_path"),
