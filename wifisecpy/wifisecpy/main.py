@@ -1,25 +1,41 @@
 import argparse
 import netifaces
 import configparser
+import os
+import logging
 from modules.wifi_scanner import scan_wifi_networks
 from modules.device_discoverer import discover_devices
 from modules.port_scanner import scan_ports
 from tqdm import tqdm
-from modules.vulnerability_scanner import check_vulnerabilities, get_os, get_service_versions
+from modules.vulnerability_scanner import check_vulnerabilities, get_os, get_service_versions, scan_for_cves
 from modules.report_generator import generate_html_report, generate_pdf_report, generate_csv_report
 from modules.wireless_attacker import deauthentication_attack
 from modules.password_cracker import crack_ftp_password, crack_ssh_password, crack_wpa_password
 
+def setup_logging(config):
+    log_file = config.get('logging', 'log_file', fallback='wifisecpy.log')
+    log_level_str = config.get('logging', 'log_level', fallback='INFO').upper()
+    log_level = getattr(logging, log_level_str, logging.INFO)
+
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
+
 def interactive_mode(config):
     while True:
-        print("\nWiFiSecPy Interactive Mode")
-        print("1. scan-wifi")
-        print("2. discover-devices")
-        print("3. scan-ports")
-        print("4. full-scan")
-        print("5. deauth")
-        print("6. crack-wpa")
-        print("7. exit")
+        logging.info("\nWiFiSecPy Interactive Mode")
+        logging.info("1. scan-wifi")
+        logging.info("2. discover-devices")
+        logging.info("3. scan-ports")
+        logging.info("4. full-scan")
+        logging.info("5. deauth")
+        logging.info("6. crack-wpa")
+        logging.info("7. exit")
 
         choice = input("Enter your choice: ")
 
@@ -53,11 +69,12 @@ def interactive_mode(config):
         elif choice == "7":
             break
         else:
-            print("Invalid choice. Please try again.")
+            logging.warning("Invalid choice. Please try again.")
 
 def main():
     config = configparser.ConfigParser()
     config.read('wifisecpy/config.ini')
+    setup_logging(config)
 
     parser = argparse.ArgumentParser(description="WiFiSecPy - WiFi and Network Security Tool")
     subparsers = parser.add_subparsers(dest="command")
@@ -101,26 +118,29 @@ def main():
     args = parser.parse_args()
 
     if args.command == "interactive":
-        interactive_mode()
+        interactive_mode(config)
     elif args.command == "scan-wifi":
-        print("Scanning for WiFi networks...")
+        logging.info("Scanning for WiFi networks...")
         networks = scan_wifi_networks()
         if networks:
             for network in networks:
-                print(f"SSID: {network['ssid']}, BSSID: {network['bssid']}, Signal: {network['rssi']}, Capabilities: {network['capabilities']}")
+                logging.info(f"SSID: {network['ssid']}, BSSID: {network['bssid']}, Signal: {network['rssi']}, Capabilities: {network['capabilities']}")
     elif args.command == "discover-devices":
-        print("Discovering devices on the network...")
-        gateways = netifaces.gateways()
-        default_gateway = gateways['default'][netifaces.AF_INET][0]
-        network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
-        devices = discover_devices(network_range)
-        if devices:
-            print("Discovered devices:")
-            for device in devices:
-                vendor = f"({device['vendor']})" if device['vendor'] else ""
-                print(f"  IP: {device['ip']}, MAC: {device['mac']} {vendor}")
+        logging.info("Discovering devices on the network...")
+        try:
+            gateways = netifaces.gateways()
+            default_gateway = gateways['default'][netifaces.AF_INET][0]
+            network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
+            devices = discover_devices(network_range)
+            if devices:
+                logging.info("Discovered devices:")
+                for device in devices:
+                    vendor = f"({device['vendor']})" if device['vendor'] else ""
+                    logging.info(f"  IP: {device['ip']}, MAC: {device['mac']} {vendor}")
+        except Exception as e:
+            logging.error(f"Error discovering devices: {e}")
     elif args.command == "scan-ports":
-        print(f"Scanning ports on {args.ip_address}...")
+        logging.info(f"Scanning ports on {args.ip_address}...")
         ports_to_scan = []
         if "-" in args.ports:
             start, end = map(int, args.ports.split('-'))
@@ -130,37 +150,44 @@ def main():
 
         open_ports = scan_ports(args.ip_address, ports_to_scan)
         if open_ports:
-            print(f"Open ports on {args.ip_address}: {open_ports}")
+            logging.info(f"Open ports on {args.ip_address}: {open_ports}")
     elif args.command == "os-scan":
-        print("Performing OS scan on all discovered devices (requires root)...")
-        gateways = netifaces.gateways()
-        default_gateway = gateways['default'][netifaces.AF_INET][0]
-        network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
-        devices = discover_devices(network_range)
-        if devices:
-            for device in devices:
-                os = get_os(device['ip'])
-                if os:
-                    print(f"  IP: {device['ip']}, OS: {os}")
+        logging.info("Performing OS scan on all discovered devices (requires root)...")
+        try:
+            gateways = netifaces.gateways()
+            default_gateway = gateways['default'][netifaces.AF_INET][0]
+            network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
+            devices = discover_devices(network_range)
+            if devices:
+                for device in devices:
+                    os_info = get_os(device['ip'])
+                    if os_info:
+                        logging.info(f"  IP: {device['ip']}, OS: {os_info}")
+        except Exception as e:
+            logging.error(f"Error during OS scan: {e}")
     elif args.command == "service-scan":
-        print("Performing service version scan on all discovered devices...")
-        gateways = netifaces.gateways()
-        default_gateway = gateways['default'][netifaces.AF_INET][0]
-        network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
-        devices = discover_devices(network_range)
-        if devices:
-            ports_to_scan = range(1, 1025)
-            for device in devices:
-                print(f"Scanning services on {device['ip']}...")
-                services = get_service_versions(device['ip'], ports_to_scan)
-                if services:
-                    for port, service in services.items():
-                        print(f"  Port {port}: {service}")
+        logging.info("Performing service version scan on all discovered devices...")
+        try:
+            gateways = netifaces.gateways()
+            default_gateway = gateways['default'][netifaces.AF_INET][0]
+            network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
+            devices = discover_devices(network_range)
+            if devices:
+                ports_to_scan = range(1, 1025)
+                for device in devices:
+                    logging.info(f"Scanning services on {device['ip']}...")
+                    services = get_service_versions(device['ip'], ports_to_scan)
+                    if services:
+                        for port, service in services.items():
+                            logging.info(f"  Port {port}: {service}")
+        except Exception as e:
+            logging.error(f"Error during service scan: {e}")
     elif args.command == "deauth":
         deauthentication_attack(args.target_mac, args.gateway_mac, args.iface)
     elif args.command == "crack-wpa":
         crack_wpa_password(args.cap_file, args.password_list)
     elif args.command == "full-scan":
+        logging.info("Performing a full scan...")
         report_data = {
             "wifi_networks": scan_wifi_networks(),
             "discovered_devices": [],
@@ -171,42 +198,48 @@ def main():
             "cve_results": [],
         }
 
-        gateways = netifaces.gateways()
-        default_gateway = gateways['default'][netifaces.AF_INET][0]
-        network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
-        devices = discover_devices(network_range)
-        report_data["discovered_devices"] = devices
+        try:
+            gateways = netifaces.gateways()
+            default_gateway = gateways['default'][netifaces.AF_INET][0]
+            network_range = f"{default_gateway.rsplit('.', 1)[0]}.0/24"
+            devices = discover_devices(network_range)
+            report_data["discovered_devices"] = devices
 
-        if devices:
-            ports_to_scan = range(1, 1025)
-            for device in devices:
-                print(f"Scanning ports on {device['ip']}...")
-                open_ports = scan_ports(device['ip'], ports_to_scan)
-                if open_ports:
-                    report_data["port_scan_results"].append({"ip": device['ip'], "open_ports": open_ports})
-                    vulnerabilities = check_vulnerabilities(open_ports)
-                    if vulnerabilities:
-                        report_data["vulnerability_results"].append({"ip": device['ip'], "vulnerabilities": vulnerabilities})
-                os = get_os(device['ip'])
-                if os:
-                    report_data["os_results"].append({"ip": device['ip'], "os": os})
-                services = get_service_versions(device['ip'], open_ports)
-                if services:
-                    report_data["service_results"].append({"ip": device['ip'], "services": services})
-                    cves = scan_for_cves(services)
-                    if cves:
-                        report_data["cve_results"].append({"ip": device['ip'], "cves": cves})
+            if devices:
+                ports_to_scan = range(1, 1025)
+                for device in devices:
+                    logging.info(f"Scanning ports on {device['ip']}...")
+                    open_ports = scan_ports(device['ip'], ports_to_scan)
+                    if open_ports:
+                        report_data["port_scan_results"].append({"ip": device['ip'], "open_ports": open_ports})
+                        vulnerabilities = check_vulnerabilities(open_ports)
+                        if vulnerabilities:
+                            report_data["vulnerability_results"].append({"ip": device['ip'], "vulnerabilities": vulnerabilities})
+                    os_info = get_os(device['ip'])
+                    if os_info:
+                        report_data["os_results"].append({"ip": device['ip'], "os": os_info})
+                    services = get_service_versions(device['ip'], open_ports)
+                    if services:
+                        report_data["service_results"].append({"ip": device['ip'], "services": services})
+                        cves = scan_for_cves(services)
+                        if cves:
+                            report_data["cve_results"].append({"ip": device['ip'], "cves": cves})
+        except Exception as e:
+            logging.error(f"Error during full scan: {e}")
 
 
         if args.output_report:
-            print(f"Generating report at {args.output_report}...")
-            if args.report_format == "html":
-                generate_html_report(report_data, "wifisecpy/templates/report_template.html", args.output_report)
-            elif args.report_format == "pdf":
-                generate_pdf_report(report_data, args.output_report)
-            elif args.report_format == "csv":
-                generate_csv_report(report_data, args.output_report)
-            print("Report generated successfully.")
+            logging.info(f"Generating report at {args.output_report}...")
+            try:
+                if args.report_format == "html":
+                    generate_html_report(report_data, "wifisecpy/templates/report_template.html", args.output_report)
+                elif args.report_format == "pdf":
+                    generate_pdf_report(report_data, args.output_report)
+                elif args.report_format == "csv":
+                    generate_csv_report(report_data, args.output_report)
+                logging.info("Report generated successfully.")
+            except Exception as e:
+                logging.error(f"Error generating report: {e}")
 
 if __name__ == "__main__":
     main()

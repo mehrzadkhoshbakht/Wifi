@@ -1,5 +1,6 @@
 import subprocess
 import json
+import logging
 
 def scan_wifi_networks():
     """
@@ -18,8 +19,11 @@ def scan_wifi_networks():
         networks = json.loads(result.stdout)
         return networks
     except FileNotFoundError:
-        print("Error: 'termux-wifi-scaninfo' command not found. Make sure you are running this on Termux with the Termux:API app installed.")
+        logging.error("Error: 'termux-wifi-scaninfo' command not found. Make sure you are running this on Termux with the Termux:API app installed.")
         return None
     except subprocess.CalledProcessError as e:
-        print(f"Error executing 'termux-wifi-scaninfo': {e}")
+        logging.error(f"Error executing 'termux-wifi-scaninfo': {e}")
+        return None
+    except json.JSONDecodeError as e:
+        logging.error(f"Error decoding JSON from 'termux-wifi-scaninfo': {e}")
         return None

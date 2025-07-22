@@ -1,5 +1,6 @@
 import socket
 from tqdm import tqdm
+import logging
 
 def scan_ports(ip_address, ports, progress_bar=None):
     """
@@ -23,7 +24,9 @@ def scan_ports(ip_address, ports, progress_bar=None):
                 if result == 0:
                     open_ports.append(port)
         except socket.error as e:
-            print(f"Error scanning port {port}: {e}")
+            logging.error(f"Error scanning port {port} on {ip_address}: {e}")
+        except Exception as e:
+            logging.error(f"An unexpected error occurred while scanning port {port} on {ip_address}: {e}")
         if progress_bar:
             progress_bar.update(1)
     return open_ports

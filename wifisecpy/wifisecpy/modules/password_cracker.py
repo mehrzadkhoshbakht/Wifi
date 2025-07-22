@@ -1,4 +1,5 @@
 import subprocess
+import logging
 
 def crack_wpa_password(cap_file, password_list):
     """
@@ -8,10 +9,10 @@ def crack_wpa_password(cap_file, password_list):
         cap_file: The path to the .cap file containing the handshake.
         password_list: The path to the password list.
     """
-    print("[*] Cracking WPA/WPA2 password...")
-    print(f"[*] CAP File: {cap_file}")
-    print(f"[*] Password List: {password_list}")
-    print("[!] Note: This feature requires aircrack-ng to be installed.")
+    logging.info("[*] Cracking WPA/WPA2 password...")
+    logging.info(f"[*] CAP File: {cap_file}")
+    logging.info(f"[*] Password List: {password_list}")
+    logging.warning("[!] Note: This feature requires aircrack-ng to be installed.")
 
     try:
         result = subprocess.run(
@@ -20,11 +21,13 @@ def crack_wpa_password(cap_file, password_list):
             text=True,
             check=True
         )
-        print(result.stdout)
+        logging.info(result.stdout)
     except FileNotFoundError:
-        print("[!] Error: aircrack-ng not found. Please make sure it is installed and in your PATH.")
+        logging.error("[!] Error: aircrack-ng not found. Please make sure it is installed and in your PATH.")
     except subprocess.CalledProcessError as e:
-        print(f"[!] Error: {e.stderr}")
+        logging.error(f"[!] Error: {e.stderr}")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred during WPA password cracking: {e}")
 
 def crack_ftp_password(hostname, username, password_list):
     """
