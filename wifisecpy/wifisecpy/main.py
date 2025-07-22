@@ -8,7 +8,7 @@ from tqdm import tqdm
 from modules.vulnerability_scanner import check_vulnerabilities, get_os, get_service_versions
 from modules.report_generator import generate_html_report, generate_pdf_report, generate_csv_report
 from modules.wireless_attacker import deauthentication_attack
-from modules.password_cracker import crack_ftp_password, crack_ssh_password
+from modules.password_cracker import crack_ftp_password, crack_ssh_password, crack_wpa_password
 
 def interactive_mode(config):
     while True:
@@ -19,7 +19,8 @@ def interactive_mode(config):
         print("4. Perform a full scan")
         print("5. Perform a deauthentication attack")
         print("6. Crack a password")
-        print("7. Exit")
+        print("7. Crack a WPA/WPA2 password")
+        print("8. Exit")
 
         choice = input("Enter your choice: ")
 
@@ -131,6 +132,10 @@ def interactive_mode(config):
             else:
                 print("Invalid service. Please try again.")
         elif choice == "7":
+            cap_file = input("Enter the path to the .cap file: ")
+            password_list_path = input("Enter the path to the password list: ")
+            crack_wpa_password(cap_file, password_list_path)
+        elif choice == "8":
             break
         else:
             print("Invalid choice. Please try again.")
