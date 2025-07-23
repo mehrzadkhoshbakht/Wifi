@@ -117,3 +117,23 @@ python wifisecpy/main.py report --output-path my_report.html --format html
 ## Disclaimer
 
 This tool is intended for educational purposes and for testing networks only with the owner's explicit permission. Unauthorized scanning of networks is illegal. The developers of this tool are not responsible for any misuse or damage caused by this tool.
+
+## Configuration
+
+WiFiSecPy can be configured using the `config.ini` file. This file allows you to set default values for various options, such as the wireless interface, report formats, and scan parameters.
+
+To modify the configuration, open the `config.ini` file and edit the values under the appropriate sections. For example, you can change the default wireless interface by modifying the `iface` value in the `[General]` section.
+
+## GUI Version
+
+For users who prefer a graphical interface, WiFiSecPy also comes with a GUI version built with Tkinter. To launch the GUI, run the following command:
+
+```bash
+python wifisecpy/gui.py
+```
+
+The GUI provides access to all the tool's functionalities in a user-friendly way, including scanning, attacking, and reporting.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
